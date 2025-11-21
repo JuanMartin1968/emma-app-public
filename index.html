@@ -1,0 +1,997 @@
+<!-- Módulo 1: Documento y estilos -->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Emma App — Control de horas</title>
+  <style>
+    :root {
+      --bg: #f3e8ff;
+      --card: #ffffff;
+      --text: #2e1065;
+      --muted: #6b21a8;
+      --primary: #9333ea;
+      --ok: #7e22ce;
+      --danger: #dc2626;
+      --border: #d8b4fe;
+      --accent: #c084fc;
+    }
+
+    body {
+      margin: 0;
+      font-family: Segoe UI, Arial;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-weight: 700;
+    }
+
+    nav {
+      display: flex;
+      gap: 8px;
+      margin: 8px;
+    }
+
+    nav button {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--card);
+      cursor: pointer;
+    }
+
+    nav button.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 16px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    label {
+      font-size: 12px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    input,
+    select,
+    button {
+      font: inherit;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+    }
+
+    select:disabled {
+      background: #faf5ff;
+      color: #6b7280;
+      cursor: not-allowed;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn.ok {
+      background: var(--ok);
+      color: #fff;
+    }
+
+    .btn.danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--border);
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f5f3ff;
+      color: var(--muted);
+    }
+
+    .display {
+      font-size: 40px;
+      font-weight: 700;
+    }
+
+    .admin-badge {
+      background: var(--accent);
+      color: #1f2937;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- FIN Módulo 1 -->
+
+  <!-- Módulo 2: Header, login y menú -->
+  <header>
+    <div class="brand">Emma App</div>
+    <div id="login-area">
+      <input id="login-user" placeholder="Usuario (admin o juan)" />
+      <input id="login-pass" type="password" placeholder="Contraseña (1234 o 1111)" />
+      <button class="btn primary" id="btnLogin">Ingresar</button>
+    </div>
+    <div id="user-area" class="hidden">
+      <span id="user-info"></span>
+      <button class="btn danger" id="btnLogout">Salir</button>
+    </div>
+  </header>
+
+  <nav id="menu" class="hidden">
+    <button data-view="horas" class="active">Horas</button>
+    <button data-view="admin">Administración</button>
+    <button data-view="reportes" class="admin-only">Reportes</button>
+  </nav>
+  <!-- FIN Módulo 2 -->
+
+  <!-- Módulo 3: Secciones (actualizado) -->
+  <main>
+    <!-- Horas -->
+    <section id="view-horas" class="card">
+      <h2>Registro de horas</h2>
+      <div class="row">
+        <div><label>Cliente</label><select id="ctx-cliente"></select></div>
+        <div><label>Proyecto</label><select id="ctx-proyecto" disabled></select></div>
+        <div><label>Tarea</label><select id="ctx-tarea" disabled></select></div>
+        <div><label>Notas</label><input id="ctx-notas" /></div>
+      </div>
+      <div class="card" style="margin-top:12px;">
+        <h3>Cronómetro</h3>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div id="cron-display" class="display">00:00:00</div>
+          <span id="cron-hint">Presiona Iniciar</span>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn primary" id="btnIniciar">Iniciar</button>
+          <button class="btn ok" id="btnGuardar">Guardar</button>
+          <button class="btn" id="btnDetener">Detener</button>
+          <button class="btn danger" id="btnReiniciar">Reiniciar</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Registro manual</h3>
+        <div class="row">
+          <div><label>Fecha</label><input id="man-fecha" type="date" /></div>
+          <div><label>Hora inicio</label><input id="man-inicio" type="time" step="1" /></div>
+          <div><label>Hora fin</label><input id="man-fin" type="time" step="1" /></div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button class="btn ok" id="btnManGuardar">Guardar manual</button>
+          <button class="btn danger" id="btnManLimpiar">Limpiar</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Entradas</h3>
+        <div style="margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn" id="btnExportEntradas">Exportar entradas (CSV)</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Proyecto</th>
+              <th>Tarea</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>Duración</th>
+              <th>Notas</th>
+              <th>Usuario</th>
+              <th>Origen</th>
+              <th id="th-costo" class="hidden">Costo</th>
+              <th id="th-moneda" class="hidden">Moneda</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-entradas"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Administración -->
+    <section id="view-admin" class="card hidden">
+      <h2>Administración</h2>
+      <div class="row">
+        <div>
+          <label>Nuevo cliente</label>
+          <input id="cli-nuevo" /><button class="btn ok" id="btnAddCliente">Agregar</button>
+        </div>
+        <div>
+          <label>Cliente para proyecto</label>
+          <select id="prj-cliente"></select>
+          <label>Nuevo proyecto</label>
+          <input id="prj-nuevo" /><button class="btn ok" id="btnAddProyecto">Agregar</button>
+        </div>
+        <div>
+          <label>Cliente para tarea</label>
+          <select id="tar-cliente"></select>
+          <label>Nueva tarea</label>
+          <input id="tar-nuevo" /><button class="btn ok" id="btnAddTarea">Agregar</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px;">
+        <h3>Tarifas por proyecto</h3>
+        <div class="row">
+          <div>
+            <label>Cliente</label>
+            <select id="tarifa-cliente"></select>
+          </div>
+          <div>
+            <label>Proyecto</label>
+            <select id="tarifa-proyecto"></select>
+          </div>
+          <div>
+            <label>Tarifa por hora</label>
+            <input id="tarifa-valor" type="number" step="0.01" min="0" />
+          </div>
+          <div>
+            <label>Moneda</label>
+            <select id="tarifa-moneda">
+              <option value="S/">S/</option>
+              <option value="USD">USD</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button class="btn ok" id="btnSetTarifa">Guardar tarifa</button>
+          <button class="btn" id="btnExportTarifas">Exportar tarifas (CSV)</button>
+        </div>
+        <div style="margin-top:12px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Proyecto</th>
+                <th>Tarifa</th>
+                <th>Moneda</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-tarifas"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Reportes -->
+    <section id="view-reportes" class="card hidden">
+      <h2>Reportes</h2>
+      <div class="row">
+        <div><label>Cliente</label><select id="rep-cliente"></select></div>
+        <div><label>Fecha inicio</label><input id="rep-inicio" type="date" /></div>
+        <div><label>Fecha fin</label><input id="rep-fin" type="date" /></div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn primary" id="btnGenerarReporte">Generar</button>
+        <button class="btn" id="btnExportReporte">Exportar reporte (CSV)</button>
+      </div>
+      <div id="reporte-contenido"></div>
+    </section>
+  </main>
+  <!-- FIN Módulo 3 -->
+
+
+  <!-- Módulo 4: Estado, almacenamiento y utilitarios (actualizado) -->
+  <script>
+    const usuarios = [
+      { nombre: "admin", pass: "1234", rol: "admin", costoHora: 0 },
+      { nombre: "juan", pass: "1111", rol: "usuario", costoHora: 0 }
+    ];
+    let usuarioActual = null;
+
+    let clientes = JSON.parse(localStorage.getItem("emma_clientes") || "[]");
+    let proyectos = JSON.parse(localStorage.getItem("emma_proyectos") || "[]");
+    let tareas = JSON.parse(localStorage.getItem("emma_tareas") || "[]");
+    let entradas = JSON.parse(localStorage.getItem("emma_entradas") || "[]");
+    let tarifas = JSON.parse(localStorage.getItem("emma_tarifas") || "[]"); // [{cliente,proyecto,tarifaHora,moneda}]
+
+    function saveAll() {
+      localStorage.setItem("emma_clientes", JSON.stringify(clientes));
+      localStorage.setItem("emma_proyectos", JSON.stringify(proyectos));
+      localStorage.setItem("emma_tareas", JSON.stringify(tareas));
+      localStorage.setItem("emma_entradas", JSON.stringify(entradas));
+      localStorage.setItem("emma_tarifas", JSON.stringify(tarifas));
+    }
+
+    // Fecha/hora en Lima
+    function limaDateISO() {
+      const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima', year: 'numeric', month: '2-digit', day: '2-digit' });
+      const parts = fmt.formatToParts(new Date());
+      const y = parts.find(p => p.type === 'year').value;
+      const m = parts.find(p => p.type === 'month').value;
+      const d = parts.find(p => p.type === 'day').value;
+      return `${y}-${m}-${d}`;
+    }
+    function limaTimeHHMMSS(dateObj = new Date()) {
+      return new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+        .format(dateObj);
+    }
+
+    // Utilitarios
+    const pad2 = n => String(n).padStart(2, "0");
+    const formatHMS = sec => `${pad2(Math.floor(sec / 3600))}:${pad2(Math.floor((sec % 3600) / 60))}:${pad2(Math.floor(sec % 60))}`;
+    const parseTimeToSeconds = t => { const [h, m, s] = (t || "00:00:00").split(":").map(Number); return h * 3600 + m * 60 + (s || 0); };
+
+    function fillWithPlaceholder(select, items, placeholder = "-- Seleccionar --") {
+      select.innerHTML = ['<option value="">' + placeholder + '</option>']
+        .concat(items.map(v => `<option>${v}</option>`)).join("");
+    }
+    function applyRoleVisibility() {
+      const isAdmin = usuarioActual?.rol === "admin";
+      document.querySelectorAll(".admin-only").forEach(el => el.classList.toggle("hidden", !isAdmin));
+      document.getElementById("th-costo").classList.toggle("hidden", !isAdmin);
+      document.getElementById("th-moneda").classList.toggle("hidden", !isAdmin);
+    }
+    function showView(view) {
+      document.getElementById("view-horas").classList.toggle("hidden", view !== "horas");
+      document.getElementById("view-admin").classList.toggle("hidden", view !== "admin");
+      document.getElementById("view-reportes").classList.toggle("hidden", view !== "reportes");
+    }
+
+    // CSV export
+    function exportCSV(filename, rows) {
+      const csv = rows.map(r => r.map(x => `"${String(x).replace(/"/g, '""')}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+  </script>
+  <!-- FIN Módulo 4 -->
+
+  <!-- Módulo 5: Autenticación y navegación -->
+  <script>
+    // Login
+    document.getElementById("btnLogin").addEventListener("click", () => {
+      const u = document.getElementById("login-user").value.trim().toLowerCase();
+      const p = document.getElementById("login-pass").value.trim();
+      const usr = usuarios.find(x => x.nombre.toLowerCase() === u && x.pass === p);
+      if (!usr) { alert("Credenciales inválidas"); return; }
+      usuarioActual = usr;
+      document.getElementById("login-area").classList.add("hidden");
+      document.getElementById("user-area").classList.remove("hidden");
+      document.getElementById("user-info").innerHTML = `${usr.nombre} <span class="admin-badge">${usr.rol}</span>`;
+      document.getElementById("menu").classList.remove("hidden");
+      applyRoleVisibility();
+      renderAll();
+      showView("horas");
+    });
+
+    document.getElementById("btnLogout").addEventListener("click", () => {
+      usuarioActual = null;
+      document.getElementById("login-area").classList.remove("hidden");
+      document.getElementById("user-area").classList.add("hidden");
+      document.getElementById("menu").classList.add("hidden");
+      showView("horas");
+    });
+
+    // Menú
+    const menu = document.getElementById("menu");
+    menu.addEventListener("click", (e) => {
+      const btn = e.target.closest("button"); if (!btn) return;
+      [...menu.querySelectorAll("button")].forEach(b => b.classList.toggle("active", b === btn));
+      showView(btn.dataset.view);
+    });
+  </script>
+  <!-- FIN Módulo 5 -->
+
+  <!-- Módulo 6: Selects dependientes y CRUD (actualizado: reinicio selección tras guardar, actualización retroactiva de entradas al cambiar tarifa) -->
+  <script>
+    // Cliente en Horas: sin autoselección
+    function renderClientSelectOnce() {
+      const selC = document.getElementById("ctx-cliente");
+      fillWithPlaceholder(selC, clientes, "-- Seleccionar cliente --");
+      selC.value = "";
+    }
+
+    // Dependientes en Horas
+    function renderDependents() {
+      const c = document.getElementById("ctx-cliente").value;
+      const selP = document.getElementById("ctx-proyecto");
+      const selT = document.getElementById("ctx-tarea");
+      const hasClient = !!c;
+
+      selP.disabled = !hasClient;
+      selT.disabled = !hasClient;
+
+      const prjNames = hasClient ? proyectos.filter(p => p.cliente === c).map(p => p.nombre) : [];
+      const taskNames = hasClient ? tareas.filter(t => t.cliente === c).map(t => t.nombre) : [];
+
+      fillWithPlaceholder(selP, prjNames, "-- Seleccionar proyecto --");
+      fillWithPlaceholder(selT, taskNames, "-- Seleccionar tarea --");
+    }
+    document.getElementById("ctx-cliente").addEventListener("change", renderDependents);
+
+    // Administración: clientes y proyectos para tarifas
+    function renderAdminSelects() {
+      const prjCliente = document.getElementById("prj-cliente");
+      const tarCliente = document.getElementById("tar-cliente");
+      const tarifaCliente = document.getElementById("tarifa-cliente");
+      const tarifaProyecto = document.getElementById("tarifa-proyecto");
+
+      fillWithPlaceholder(prjCliente, clientes, "-- Seleccionar cliente --");
+      fillWithPlaceholder(tarCliente, clientes, "-- Seleccionar cliente --");
+      fillWithPlaceholder(tarifaCliente, clientes, "-- Seleccionar cliente --");
+
+      const cSel = tarifaCliente.value;
+      const prjs = cSel ? proyectos.filter(p => p.cliente === cSel).map(p => p.nombre) : [];
+      fillWithPlaceholder(tarifaProyecto, prjs, "-- Seleccionar proyecto --");
+    }
+    document.getElementById("tarifa-cliente").addEventListener("change", () => {
+      const cSel = document.getElementById("tarifa-cliente").value;
+      const tarifaProyecto = document.getElementById("tarifa-proyecto");
+      const prjs = cSel ? proyectos.filter(p => p.cliente === cSel).map(p => p.nombre) : [];
+      fillWithPlaceholder(tarifaProyecto, prjs, "-- Seleccionar proyecto --");
+    });
+
+    // Reportes: “Todos los clientes”
+    function renderReportSelects() {
+      const repCliente = document.getElementById("rep-cliente");
+      repCliente.innerHTML = ['<option value="__todos__">Todos los clientes</option>']
+        .concat(clientes.map(v => `<option>${v}</option>`)).join("");
+    }
+
+    // CRUD Cliente
+    document.getElementById("btnAddCliente").addEventListener("click", () => {
+      const nombre = document.getElementById("cli-nuevo").value.trim();
+      if (!nombre) return alert("Ingresa nombre de cliente");
+      if (clientes.includes(nombre)) return alert("El cliente ya existe");
+      clientes.push(nombre); saveAll();
+
+      renderClientSelectOnce();
+      renderAdminSelects();
+      renderReportSelects();
+      renderDependents();
+
+      document.getElementById("cli-nuevo").value = "";
+      alert("Cliente agregado");
+    });
+
+    // CRUD Proyecto
+    document.getElementById("btnAddProyecto").addEventListener("click", () => {
+      const c = document.getElementById("prj-cliente").value;
+      const nombre = document.getElementById("prj-nuevo").value.trim();
+      if (!c) return alert("Selecciona un cliente para el proyecto");
+      if (!nombre) return alert("Ingresa nombre de proyecto");
+      if (proyectos.some(p => p.cliente === c && p.nombre === nombre)) return alert("Proyecto ya existe para ese cliente");
+
+      proyectos.push({ cliente: c, nombre }); saveAll();
+      if (document.getElementById("ctx-cliente").value === c) renderDependents();
+
+      document.getElementById("prj-nuevo").value = "";
+      renderAdminSelects();
+      alert("Proyecto agregado");
+    });
+
+    // CRUD Tarea
+    document.getElementById("btnAddTarea").addEventListener("click", () => {
+      const c = document.getElementById("tar-cliente").value;
+      const nombre = document.getElementById("tar-nuevo").value.trim();
+      if (!c) return alert("Selecciona un cliente para la tarea");
+      if (!nombre) return alert("Ingresa nombre de tarea");
+      if (tareas.some(t => t.cliente === c && t.nombre === nombre)) return alert("La tarea ya existe para ese cliente");
+
+      tareas.push({ cliente: c, nombre }); saveAll();
+      if (document.getElementById("ctx-cliente").value === c) renderDependents();
+
+      document.getElementById("tar-nuevo").value = "";
+      alert("Tarea agregada");
+    });
+
+    // Actualiza entradas existentes para un proyecto (recalcula tarifa, moneda y costo)
+    function updateEntriesForProject(cliente, proyecto) {
+      const tarifaObj = tarifas.find(t => t.cliente === cliente && t.proyecto === proyecto);
+      const tarifaHora = tarifaObj?.tarifaHora ?? 0;
+      const moneda = tarifaObj?.moneda ?? "S/";
+      let changed = false;
+      entradas = entradas.map(e => {
+        if (e.cliente === cliente && e.proyecto === proyecto) {
+          const seg = parseTimeToSeconds(e.duracion || "00:00:00");
+          const costo = (tarifaHora * (seg / 3600));
+          changed = true;
+          return {
+            ...e,
+            tarifaHora: tarifaHora,
+            moneda: moneda,
+            costo: Number(costo).toFixed(2)
+          };
+        }
+        return e;
+      });
+      if (changed) { saveAll(); if (typeof renderEntradas === "function") renderEntradas(); }
+    }
+
+    // CRUD Tarifa por proyecto (guarda y actualiza entradas históricas)
+    document.getElementById("btnSetTarifa").addEventListener("click", () => {
+      const c = document.getElementById("tarifa-cliente").value;
+      const p = document.getElementById("tarifa-proyecto").value;
+      const v = parseFloat(document.getElementById("tarifa-valor").value);
+      const m = document.getElementById("tarifa-moneda").value;
+      if (!c || !p) return alert("Selecciona cliente y proyecto");
+      if (!(v >= 0)) return alert("Ingresa tarifa válida");
+
+      const idx = tarifas.findIndex(t => t.cliente === c && t.proyecto === p);
+      if (idx >= 0) tarifas[idx] = { cliente: c, proyecto: p, tarifaHora: v, moneda: m };
+      else tarifas.push({ cliente: c, proyecto: p, tarifaHora: v, moneda: m });
+      saveAll();
+      renderTablaTarifas();
+
+      // Actualizar retroactivamente todas las entradas del proyecto con la nueva tarifa/moneda
+      updateEntriesForProject(c, p);
+
+      alert("Tarifa guardada y entradas actualizadas");
+    });
+
+    // Tabla de tarifas
+    function renderTablaTarifas() {
+      const tbody = document.getElementById("tabla-tarifas");
+      tbody.innerHTML = tarifas.map(t => `<tr><td>${t.cliente}</td><td>${t.proyecto}</td><td>${t.tarifaHora.toFixed(2)}</td><td>${t.moneda}</td></tr>`).join("");
+    }
+
+    // Render global
+    function renderAll() {
+      renderClientSelectOnce();
+      renderDependents();
+      renderAdminSelects();
+      renderReportSelects();
+      renderTablaTarifas();
+      if (typeof renderEntradas === "function") renderEntradas();
+    }
+
+    // Datos demo (solo si vacío)
+    (function initDemo() {
+      let changed = false;
+      if (clientes.length === 0) { clientes = ["ACME SAC", "Globex", "Initech"]; changed = true; }
+      if (proyectos.length === 0) {
+        proyectos = [
+          { cliente: "ACME SAC", nombre: "Implementación ERP" },
+          { cliente: "Globex", nombre: "Sitio web" }
+        ]; changed = true;
+      }
+      if (tareas.length === 0) {
+        tareas = [
+          { cliente: "ACME SAC", nombre: "Análisis" },
+          { cliente: "ACME SAC", nombre: "Desarrollo" },
+          { cliente: "Globex", nombre: "Soporte" }
+        ]; changed = true;
+      }
+      if (changed) saveAll();
+    })();
+  </script>
+  <!-- FIN Módulo 6 -->
+
+  <!-- Módulo 7: Cronómetro, entradas, reportes y exportación CSV (actualizado: reinicio selección tras guardar, exportación automática y recalculo al cambiar tarifa/moneda) -->
+  <script>
+    // Cronómetro
+    let startTime = null, timerInterval = null;
+    const cronDisplay = document.getElementById("cron-display");
+    const cronHint = document.getElementById("cron-hint");
+
+    document.getElementById("btnIniciar").addEventListener("click", () => {
+      if (timerInterval) return;
+      startTime = Date.now();
+      timerInterval = setInterval(() => {
+        const sec = Math.floor((Date.now() - startTime) / 1000);
+        cronDisplay.textContent = formatHMS(sec);
+      }, 250);
+      cronHint.textContent = "Cronómetro en curso…";
+    });
+    document.getElementById("btnDetener").addEventListener("click", () => {
+      if (!timerInterval) return;
+      clearInterval(timerInterval); timerInterval = null;
+      cronHint.textContent = "Cronómetro detenido.";
+    });
+    document.getElementById("btnReiniciar").addEventListener("click", () => {
+      clearInterval(timerInterval); timerInterval = null; startTime = null;
+      cronDisplay.textContent = "00:00:00"; cronHint.textContent = "Cronómetro listo.";
+    });
+
+    // Helper: reiniciar selects de cliente/proyecto/tarea tras guardar
+    function resetSelectionAfterSave() {
+      document.getElementById("ctx-cliente").value = "";
+      renderDependents(); // esto deshabilita proyecto/tarea y limpia opciones
+    }
+
+    // Guardar cronómetro (Lima + tarifa por proyecto) + export automático CSV
+    document.getElementById("btnGuardar").addEventListener("click", () => {
+      const cliente = document.getElementById("ctx-cliente").value;
+      const proyecto = document.getElementById("ctx-proyecto").value;
+      const tarea = document.getElementById("ctx-tarea").value;
+      const notas = document.getElementById("ctx-notas").value.trim();
+      if (!cliente) return alert("Selecciona un cliente.");
+      if (!proyecto) return alert("Selecciona un proyecto del cliente.");
+      if (!tarea) return alert("Selecciona una tarea del cliente.");
+
+      const fecha = limaDateISO();
+      const ahora = new Date();
+      const inicioStr = startTime ? limaTimeHHMMSS(new Date(startTime)) : limaTimeHHMMSS(ahora);
+      const finStr = limaTimeHHMMSS(ahora);
+      const durSeg = startTime ? Math.floor((ahora - startTime) / 1000) : 0;
+      const duracionStr = formatHMS(durSeg);
+
+      const tarifaObj = tarifas.find(t => t.cliente === cliente && t.proyecto === proyecto);
+      const tarifaHora = tarifaObj?.tarifaHora ?? 0;
+      const moneda = tarifaObj?.moneda ?? "S/";
+      const costoTotal = (tarifaHora * (durSeg / 3600));
+      const costoStr = Number(costoTotal).toFixed(2);
+
+      entradas.push({
+        fecha, cliente, proyecto, tarea,
+        inicio: inicioStr, fin: finStr, duracion: duracionStr,
+        notas, usuario: usuarioActual.nombre, origen: "cronometro",
+        tarifaHora, moneda, costo: costoStr
+      });
+      saveAll();
+      renderEntradas();
+
+      clearInterval(timerInterval); timerInterval = null; startTime = null;
+      cronDisplay.textContent = "00:00:00"; cronHint.textContent = "Guardado y reiniciado.";
+      document.getElementById("ctx-notas").value = "";
+
+      // Reiniciar selección para evitar confusiones
+      resetSelectionAfterSave();
+
+      // Exportar CSV automáticamente (entradas)
+      const rows = [
+        ["Fecha", "Cliente", "Proyecto", "Tarea", "Inicio", "Fin", "Duración", "Notas", "Usuario", "Origen", "Costo", "Moneda"]
+      ].concat(entradas.map(e => [
+        e.fecha, e.cliente, e.proyecto, e.tarea, e.inicio, e.fin, e.duracion, e.notas || "", e.usuario, e.origen, Number(e.costo || 0).toFixed(2), e.moneda || "S/"
+      ]));
+      exportCSV("entradas.csv", rows);
+    });
+
+    // Registro manual (Lima + tarifa por proyecto) + export automático CSV
+    document.getElementById("btnManGuardar").addEventListener("click", () => {
+      const cliente = document.getElementById("ctx-cliente").value;
+      const proyecto = document.getElementById("ctx-proyecto").value;
+      const tarea = document.getElementById("ctx-tarea").value;
+      const notas = document.getElementById("ctx-notas").value.trim();
+      const fecha = document.getElementById("man-fecha").value;
+      const hInicio = document.getElementById("man-inicio").value;
+      const hFin = document.getElementById("man-fin").value;
+
+      if (!cliente || !proyecto || !tarea) return alert("Cliente, proyecto y tarea son obligatorios.");
+      if (!fecha || !hInicio || !hFin) return alert("Fecha, inicio y fin son obligatorios.");
+
+      const hoy = limaDateISO();
+      if (fecha > hoy) return alert("No se permiten fechas futuras.");
+      const sIni = parseTimeToSeconds(hInicio), sFin = parseTimeToSeconds(hFin);
+      if (sFin < sIni) return alert("La hora de fin no puede ser anterior a la de inicio.");
+
+      const durSeg = sFin - sIni;
+      const duracionStr = formatHMS(durSeg);
+
+      const tarifaObj = tarifas.find(t => t.cliente === cliente && t.proyecto === proyecto);
+      const tarifaHora = tarifaObj?.tarifaHora ?? 0;
+      const moneda = tarifaObj?.moneda ?? "S/";
+      const costoTotal = (tarifaHora * (durSeg / 3600));
+      const costoStr = Number(costoTotal).toFixed(2);
+
+      entradas.push({
+        fecha, cliente, proyecto, tarea,
+        inicio: hInicio, fin: hFin, duracion: duracionStr,
+        notas, usuario: usuarioActual.nombre, origen: "manual",
+        tarifaHora, moneda, costo: costoStr
+      });
+      saveAll(); renderEntradas();
+      ["man-fecha", "man-inicio", "man-fin", "ctx-notas"].forEach(id => document.getElementById(id).value = "");
+
+      // Reiniciar selección para evitar confusiones
+      resetSelectionAfterSave();
+
+      // Exportar CSV automáticamente (entradas)
+      const rows = [
+        ["Fecha", "Cliente", "Proyecto", "Tarea", "Inicio", "Fin", "Duración", "Notas", "Usuario", "Origen", "Costo", "Moneda"]
+      ].concat(entradas.map(e => [
+        e.fecha, e.cliente, e.proyecto, e.tarea, e.inicio, e.fin, e.duracion, e.notas || "", e.usuario, e.origen, Number(e.costo || 0).toFixed(2), e.moneda || "S/"
+      ]));
+      exportCSV("entradas.csv", rows);
+    });
+    document.getElementById("btnManLimpiar").addEventListener("click", () => {
+      ["man-fecha", "man-inicio", "man-fin"].forEach(id => document.getElementById(id).value = "");
+    });
+
+    // Entradas
+    function renderEntradas() {
+      const tbody = document.getElementById("tabla-entradas");
+      const isAdmin = usuarioActual?.rol === "admin";
+      document.getElementById("th-costo").classList.toggle("hidden", !isAdmin);
+      document.getElementById("th-moneda").classList.toggle("hidden", !isAdmin);
+      tbody.innerHTML = entradas.map(e => `
+    <tr>
+      <td>${e.fecha}</td><td>${e.cliente}</td><td>${e.proyecto}</td><td>${e.tarea}</td>
+      <td>${e.inicio}</td><td>${e.fin}</td><td>${e.duracion}</td><td>${e.notas || ""}</td>
+      <td>${e.usuario}</td><td>${e.origen}</td>${isAdmin ? `<td>${Number(e.costo).toFixed(2)}</td><td>${e.moneda}</td>` : ""}
+    </tr>`).join("");
+    }
+
+    // Reportes con “Todos los clientes”
+    document.getElementById("btnGenerarReporte").addEventListener("click", () => {
+      if (usuarioActual?.rol !== "admin") return alert("Solo el administrador puede generar reportes.");
+      const cliente = document.getElementById("rep-cliente").value;
+      const fInicio = document.getElementById("rep-inicio").value;
+      const fFin = document.getElementById("rep-fin").value;
+      if (!fInicio || !fFin) return alert("Fecha inicio y fecha fin son obligatorios.");
+      if (fFin < fInicio) return alert("La fecha fin no puede ser anterior a la fecha inicio.");
+
+      const rows = entradas.filter(e => {
+        const inRange = e.fecha >= fInicio && e.fecha <= fFin;
+        const byClient = cliente === "__todos__" ? true : e.cliente === cliente;
+        return inRange && byClient;
+      });
+
+      let totalSeg = 0, totalCosto = 0;
+      rows.forEach(r => {
+        const seg = parseTimeToSeconds(r.duracion || "00:00:00");
+        totalSeg += seg;
+        const tarifaHora = tarifas.find(t => t.cliente === r.cliente && t.proyecto === r.proyecto)?.tarifaHora ?? Number(r.tarifaHora || 0);
+        totalCosto += tarifaHora * (seg / 3600);
+      });
+
+      const detalle = rows.map(r => {
+        const tarifaHora = tarifas.find(t => t.cliente === r.cliente && t.proyecto === r.proyecto)?.tarifaHora ?? Number(r.tarifaHora || 0);
+        const moneda = tarifas.find(t => t.cliente === r.cliente && t.proyecto === r.proyecto)?.moneda ?? r.moneda ?? "S/";
+        const costoLinea = (tarifaHora * parseTimeToSeconds(r.duracion) / 3600);
+        return `<tr><td>${r.fecha}</td><td>${r.cliente}</td><td>${r.proyecto}</td><td>${r.tarea}</td><td>${r.duracion}</td><td>${r.origen}</td><td>${moneda} ${Number(costoLinea).toFixed(2)}</td></tr>`;
+      }).join("");
+
+      const tituloCliente = cliente === "__todos__" ? "Todos los clientes" : cliente;
+
+      document.getElementById("reporte-contenido").innerHTML = `
+    <div class="card">
+      <p><strong>Cliente:</strong> ${tituloCliente}</p>
+      <p><strong>Rango:</strong> ${fInicio} a ${fFin}</p>
+      <p><strong>Total horas:</strong> ${formatHMS(totalSeg)}</p>
+      <p><strong>Costo total (estimado):</strong> ${rows.length ? (tarifas.find(t => t.cliente === rows[0]?.cliente && t.proyecto === rows[0]?.proyecto)?.moneda ?? "S/") : "S/"} ${totalCosto.toFixed(2)}</p>
+      <table style="margin-top:8px;">
+        <thead><tr><th>Fecha</th><th>Cliente</th><th>Proyecto</th><th>Tarea</th><th>Duración</th><th>Origen</th><th>Costo</th></tr></thead>
+        <tbody>${detalle || `<tr><td colspan="7">Sin entradas</td></tr>`}</tbody>
+      </table>
+    </div>`;
+    });
+
+    // Exportar CSV: entradas
+    document.getElementById("btnExportEntradas").addEventListener("click", () => {
+      const rows = [
+        ["Fecha", "Cliente", "Proyecto", "Tarea", "Inicio", "Fin", "Duración", "Notas", "Usuario", "Origen", "Costo", "Moneda"]
+      ].concat(entradas.map(e => [
+        e.fecha, e.cliente, e.proyecto, e.tarea, e.inicio, e.fin, e.duracion, e.notas || "", e.usuario, e.origen, Number(e.costo || 0).toFixed(2), e.moneda || "S/"
+      ]));
+      exportCSV("entradas.csv", rows);
+    });
+
+    // Exportar CSV: tarifas
+    document.getElementById("btnExportTarifas").addEventListener("click", () => {
+      const rows = [
+        ["Cliente", "Proyecto", "TarifaHora", "Moneda"]
+      ].concat(tarifas.map(t => [
+        t.cliente, t.proyecto, (t.tarifaHora || 0).toFixed(2), t.moneda || "S/"
+      ]));
+      exportCSV("tarifas.csv", rows);
+    });
+
+    // Exportar CSV: reporte
+    document.getElementById("btnExportReporte").addEventListener("click", () => {
+      const table = document.querySelector("#reporte-contenido table tbody");
+      if (!table) return alert("Genera el reporte primero.");
+      const hdr = ["Fecha", "Cliente", "Proyecto", "Tarea", "Duración", "Origen", "Costo"];
+      const rows = [hdr];
+      [...table.querySelectorAll("tr")].forEach(tr => {
+        const cols = [...tr.querySelectorAll("td")].map(td => td.textContent.trim());
+        rows.push(cols);
+      });
+      exportCSV("reporte.csv", rows);
+    });
+  </script>
+  <!-- FIN Módulo 7 -->
+
+  <!-- Módulo Excel: Exportar todo a XLSX y auto-export al guardar -->
+  <script>
+    (function () {
+      // Cargar SheetJS si no está presente
+      function loadSheetJS(callback) {
+        if (window.XLSX) return callback();
+        const s = document.createElement("script");
+        s.src = "https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js";
+        s.onload = callback; s.onerror = callback;
+        document.head.appendChild(s);
+      }
+
+      // Formatea números a 2 decimales (string)
+      function fmt2(n) { return (Number(n) || 0).toFixed(2); }
+
+      // Construye datos tabulares para cada hoja
+      function buildSheets() {
+        const sheetClientes = clientes.map(c => ({ Cliente: c }));
+        const sheetProyectos = proyectos.map(p => ({ Cliente: p.cliente, Proyecto: p.nombre }));
+        const sheetTareas = tareas.map(t => ({ Cliente: t.cliente, Tarea: t.nombre }));
+        const sheetTarifas = tarifas.map(t => ({
+          Cliente: t.cliente, Proyecto: t.proyecto,
+          TarifaHora: fmt2(t.tarifaHora), Moneda: t.moneda || ""
+        }));
+        const sheetEntradas = entradas.map(e => ({
+          Fecha: e.fecha,
+          Cliente: e.cliente,
+          Proyecto: e.proyecto,
+          Tarea: e.tarea,
+          Inicio: e.inicio,
+          Fin: e.fin,
+          Duracion: e.duracion,
+          Notas: e.notas || "",
+          Usuario: e.usuario,
+          Origen: e.origen,
+          TarifaHora: fmt2(e.tarifaHora || 0),
+          Costo: fmt2(e.costo || 0),
+          Moneda: e.moneda || ""
+        }));
+        return {
+          Clientes: sheetClientes,
+          Proyectos: sheetProyectos,
+          Tareas: sheetTareas,
+          Tarifas: sheetTarifas,
+          Entradas: sheetEntradas
+        };
+      }
+
+      // Nombre de archivo con fecha Lima
+      function filenameWithLima() {
+        const d = new Date();
+        // usar Intl para zona Lima
+        const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d);
+        const y = parts.find(p => p.type === 'year').value;
+        const m = parts.find(p => p.type === 'month').value;
+        const day = parts.find(p => p.type === 'day').value;
+        const t = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(d).replace(/:/g, '-');
+        return `emma_export_${y}${m}${day}_${t}.xlsx`;
+      }
+
+      // Exporta todo a XLSX y dispara descarga
+      function exportAllToXLSX() {
+        loadSheetJS(() => {
+          if (!window.XLSX) { alert("No se pudo cargar la librería XLSX para exportar."); return; }
+          const sheets = buildSheets();
+          const wb = XLSX.utils.book_new();
+          Object.keys(sheets).forEach(name => {
+            const data = sheets[name];
+            const ws = XLSX.utils.json_to_sheet(data, { skipHeader: false });
+            XLSX.utils.book_append_sheet(wb, ws, name);
+          });
+          const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+          const blob = new Blob([wbout], { type: "application/octet-stream" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url; a.download = filenameWithLima();
+          document.body.appendChild(a); a.click();
+          document.body.removeChild(a); URL.revokeObjectURL(url);
+        });
+      }
+
+      // Botón visible para exportar manualmente (si no existe)
+      function ensureExportButton() {
+        if (document.getElementById("btnExportAllXLSX")) return;
+        const btn = document.createElement("button");
+        btn.id = "btnExportAllXLSX";
+        btn.className = "btn";
+        btn.textContent = "Exportar todo a Excel (XLSX)";
+        btn.style.marginLeft = "8px";
+        btn.addEventListener("click", exportAllToXLSX);
+        // intentar colocarlo en el área de administración o header
+        const admin = document.querySelector("#view-admin .card") || document.querySelector("header");
+        if (admin) admin.parentNode.insertBefore(btn, admin.nextSibling);
+        else document.body.appendChild(btn);
+      }
+
+      // Auto-export toggle (guarda en localStorage la preferencia)
+      function ensureAutoExportToggle() {
+        if (document.getElementById("chkAutoExportXLSX")) return;
+        const container = document.createElement("div");
+        container.style.marginTop = "8px";
+        container.innerHTML = `<label style="font-size:13px;margin-right:8px;"><input type="checkbox" id="chkAutoExportXLSX"/> Exportar XLSX automáticamente al guardar</label>`;
+        const adminCard = document.querySelector("#view-admin .card");
+        if (adminCard) adminCard.appendChild(container);
+        else document.body.appendChild(container);
+        const chk = document.getElementById("chkAutoExportXLSX");
+        chk.checked = localStorage.getItem("emma_auto_export_xlsx") === "1";
+        chk.addEventListener("change", () => {
+          localStorage.setItem("emma_auto_export_xlsx", chk.checked ? "1" : "0");
+        });
+      }
+
+      // Interceptar/envolver saveAll para auto-exportar
+      function wrapSaveAll() {
+        if (typeof saveAll !== "function") return;
+        if (saveAll.__wrapped_by_excel) return; // evitar doble wrap
+        const original = saveAll;
+        const wrapped = function () {
+          original.apply(this, arguments);
+          try {
+            const auto = localStorage.getItem("emma_auto_export_xlsx") === "1";
+            if (auto) exportAllToXLSX();
+          } catch (e) { }
+        };
+        wrapped.__wrapped_by_excel = true;
+        window.saveAll = wrapped;
+      }
+
+      // Exponer función global por si el usuario la invoca manualmente
+      window.exportEmmaToXLSX = exportAllToXLSX;
+
+      // Inicializar UI y wrapping cuando DOM listo
+      function init() {
+        ensureExportButton();
+        ensureAutoExportToggle();
+        wrapSaveAll();
+      }
+
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+      else init();
+
+    })();
+  </script>
+  <!-- FIN Módulo Excel -->
+
+  <!-- Módulo 8: Cierre del documento -->
+  <!-- FIN -->
+</body>
+
+</html>
+<!-- FIN Módulo 8 -->
